@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Classly — Calculus Course Platform
 
-## Getting Started
+Private learning portal built from the [PRD](./calculus-course-platform-prd.md): recorded sessions (Google Drive), practice and graded assignments, admin-managed enrollments, and server-side grading/deadlines.
 
-First, run the development server:
+**Stack:** Next.js (App Router) · Convex · Convex Auth (email OTP + password) · Tailwind · shadcn/ui · KaTeX
+
+## Quick start
+
+### 1. Environment
+
+Copy the example env file and fill in values after Convex is linked:
+
+```bash
+cp .env.example .env.local
+```
+
+**Convex Auth (required for login)** — on your Convex **dev deployment**, run once:
+
+```bash
+npm run setup:auth-env
+# production app URL instead of localhost when deploying:
+# node scripts/setup-convex-auth-env.mjs https://your-app.vercel.app
+```
+
+This sets `SITE_URL`, `JWT_PRIVATE_KEY`, and `JWKS`. Without them, password login and email codes fail.
+
+In the **Convex dashboard** (Settings → Environment variables), also set:
+
+| Variable | Purpose |
+|----------|---------|
+| `RESEND_API_KEY` | Send login codes (optional in dev — codes log to Convex logs) |
+| `RESEND_FROM_EMAIL` | Verified sender in Resend |
+| `SETUP_SECRET` | One-time secret for bootstrapping the first admin |
+
+### 2. Convex + Next.js
+
+```bash
+npm install
+npx convex dev
+```
+
+In a second terminal:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. First admin account
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In the Convex dashboard → **Functions**, run the action `bootstrap:createInitialAdmin` with:
 
-## Learn More
+```json
+{
+  "setupSecret": "<same as SETUP_SECRET>",
+  "name": "Instructor",
+  "email": "you@example.com",
+  "password": "your-secure-password"
+}
+```
 
-To learn more about Next.js, take a look at the following resources:
+Sign in at `/login` (Password tab) with that email and password.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Course setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Admin → Dashboard** — create a course (auto-creates Prerequisites + Weeks 1–8 with PA/GA slots).
+2. **Admin → Students** — add students and enroll them in the course.
+3. **Admin → Course** — paste Google Drive links (`Anyone with the link` viewer), publish the course.
+4. **Assignment editor** — add questions, set GA deadlines, publish assignments.
 
-## Deploy on Vercel
+Students use **My Courses** → week sidebar → sessions and assignments.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Next.js dev server |
+| `npx convex dev` | Convex backend + regenerates `convex/_generated` |
+| `npm run test:unit` | Vitest (grading logic) |
+| `npm run build` | Production build |
+
+## PRD defaults implemented
+
+- **GA scoring:** best attempt (configurable per assignment)
+- **Feedback:** score only until deadline; full solutions after deadline (configurable)
+- **Late policy:** strict by default on graded assignments
+- **Auth:** no public signup; admin creates students; email OTP or password
+- **Attempts:** unlimited until deadline; one in-progress attempt; autosave on attempt screen
+
+## Deploy
+
+- **Frontend:** Vercel — set `NEXT_PUBLIC_CONVEX_URL`
+- **Backend:** Convex Cloud — set env vars in dashboard
+- Run `npx convex deploy` for production
+
+## Tests
+
+```bash
+npm run test:unit
+```
+
+Covers numeric/MCQ grading and scoring policy helpers in `convex/lib/grading.test.ts`.
