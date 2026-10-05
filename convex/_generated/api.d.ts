@@ -25,6 +25,7 @@ import type * as lib_grading from "../lib/grading.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as progress from "../progress.js";
 import type * as sections from "../sections.js";
+import type * as seed from "../seed.js";
 import type * as sessions from "../sessions.js";
 import type * as users from "../users.js";
 
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   "lib/permissions": typeof lib_permissions;
   progress: typeof progress;
   sections: typeof sections;
+  seed: typeof seed;
   sessions: typeof sessions;
   users: typeof users;
 }>;

@@ -22,12 +22,15 @@ export default function LoginPage() {
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      await signIn("email-otp", { email });
+      await signIn("email-otp", { email: cleanEmail });
       setStep("code");
-      toast.success("If your account exists, a login code was sent.");
-    } catch {
-      toast.error("Could not send login code.");
+      toast.success("Login code sent! Please check your inbox (and spam folder).");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Could not send login code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -36,8 +39,9 @@ export default function LoginPage() {
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      await signIn("email-otp", { email, code });
+      await signIn("email-otp", { email: cleanEmail, code: code.trim() });
     } catch {
       toast.error("Invalid or expired code.");
     } finally {
@@ -48,10 +52,18 @@ export default function LoginPage() {
   async function loginPassword(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      await signIn("password", { email, password, flow: "signIn" });
-    } catch {
-      toast.error("Invalid email or password.");
+      await signIn("password", { email: cleanEmail, password, flow: "signIn" });
+    } catch (err: any) {
+      const msg = String(err?.message ?? "");
+      if (msg.includes("InvalidAccountId")) {
+        toast.error(
+          "Account not found or password login not set up for this email. Please contact your instructor.",
+        );
+      } else {
+        toast.error("Invalid email or password.");
+      }
     } finally {
       setLoading(false);
     }
