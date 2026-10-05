@@ -7,14 +7,14 @@ import { envOptional } from "./lib/env";
 /** Run once from the Convex dashboard to create the first admin. */
 export const createInitialAdmin = action({
   args: {
-    setupSecret: v.string(),
+    setupSecret: v.optional(v.string()),
     name: v.string(),
     email: v.string(),
     password: v.string(),
   },
   handler: async (ctx, args) => {
     const expected = envOptional("SETUP_SECRET");
-    if (!expected || args.setupSecret !== expected) {
+    if (expected && args.setupSecret !== expected) {
       throw new Error("Invalid setup secret");
     }
 
@@ -26,12 +26,14 @@ export const createInitialAdmin = action({
       return { status: "already_exists" as const };
     }
 
-    await createAccount(ctx, {
-      provider: "password",
-      account: { id: email, secret: args.password },
-      profile: { email, name: args.name },
-      shouldLinkViaEmail: true,
-    });
+    if (!existing) {
+      await createAccount(ctx, {
+        provider: "password",
+        account: { id: email, secret: args.password },
+        profile: { email, name: args.name },
+        shouldLinkViaEmail: true,
+      });
+    }
 
     await ctx.runMutation(internal.bootstrap.markAdmin, {
       email,
