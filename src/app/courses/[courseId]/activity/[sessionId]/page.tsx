@@ -10,7 +10,7 @@ export default function ActivityPage() {
   const sessionId = params.sessionId as Id<"sessions">;
 
   return (
-    <div className="p-4 md:p-8 max-w-3xl">
+    <div className="p-4 md:p-8 w-full">
       <ActivityQuestionsPlayer courseId={courseId} sessionId={sessionId} />
     </div>
   );

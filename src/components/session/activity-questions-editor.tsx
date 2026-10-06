@@ -707,6 +707,20 @@ export function ActivityQuestionsEditor({
               </div>
             </div>
           ))}
+
+          {/* Add question button at the bottom so user doesn't have to scroll up */}
+          <div className="pt-2 flex justify-start">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addQuestion}
+              className="gap-1.5 border-dashed hover:border-solid hover:bg-accent"
+            >
+              <Plus className="size-3.5" />
+              Add Activity Question
+            </Button>
+          </div>
         </div>
       )}
     </div>

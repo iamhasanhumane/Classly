@@ -10,25 +10,44 @@ export const listForStudent = query({
     const { userId, user } = await requireUser(ctx);
     if (user.role === "admin") {
       const all = await ctx.db.query("courses").collect();
-      return all.map((c) => ({ ...c, progress: 100, nextDeadline: null }));
+      return all.map((c) => ({
+        ...c,
+        progress: 100,
+        nextDeadline: null,
+        isEnrolled: true,
+      }));
     }
+
     const enrollments = await ctx.db
       .query("enrollments")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
+    const enrolledMap = new Map(enrollments.map((e) => [e.courseId, e]));
+
+    // Return all published courses so students can view catalog and self-enroll
+    const allPublished = await ctx.db
+      .query("courses")
+      .filter((q) => q.eq(q.field("status"), "published"))
+      .collect();
+
     const result = [];
-    for (const en of enrollments) {
-      const course = await ctx.db.get(en.courseId);
-      if (!course || course.status !== "published") continue;
-      const progress = await computeCourseProgress(ctx, userId, course._id);
-      const nextDeadline = await nextCourseDeadline(ctx, userId, course._id);
+    for (const course of allPublished) {
+      const en = enrolledMap.get(course._id);
+      const isEnrolled = Boolean(en);
+      const progress = isEnrolled
+        ? await computeCourseProgress(ctx, userId, course._id)
+        : 0;
+      const nextDeadline = isEnrolled
+        ? await nextCourseDeadline(ctx, userId, course._id)
+        : null;
       result.push({
         ...course,
+        isEnrolled,
         progress,
         nextDeadline,
-        lastViewedPath: en.lastViewedPath,
+        lastViewedPath: en?.lastViewedPath,
       });
     }
     return result;

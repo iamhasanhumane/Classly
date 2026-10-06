@@ -433,20 +433,15 @@ export function ActivityQuestionsPlayer({
 
       {/* Single bottom Submit button */}
       {!allCorrect && (
-        <div className="pt-2 border-t flex items-center gap-3">
+        <div className="pt-4 border-t flex justify-end">
           <Button
             size="default"
             disabled={submittingAll || !allFilled}
             onClick={handleSubmitAll}
-            className="gap-2 min-w-32"
+            className="gap-2 min-w-36"
           >
             {submittingAll ? "Submitting…" : "Submit Answers"}
           </Button>
-          {!allFilled && (
-            <p className="text-xs text-muted-foreground">
-              Answer all questions to submit.
-            </p>
-          )}
         </div>
       )}
     </div>
